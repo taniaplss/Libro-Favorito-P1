@@ -1,0 +1,45 @@
+# vectorizacion_texto.py
+import re
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+
+# Descargar recursos
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet')
+
+def limpiar_texto(texto):
+    texto = texto.lower()
+    texto = re.sub(r'[^a-záéíóúñü\s]', '', texto)
+
+    tokens = texto.split()
+
+    stop_words = set(stopwords.words('spanish'))
+    tokens = [t for t in tokens if t not in stop_words]
+
+    lemmatizer = WordNetLemmatizer()
+    tokens = [lemmatizer.lemmatize(t) for t in tokens]
+
+    return " ".join(tokens)  # importante para vectorizar
+
+if __name__ == "__main__":
+    with open("libro.txt", "r", encoding="utf-8") as f:
+        texto = f.read()
+
+    texto_limpio = limpiar_texto(texto)
+
+    # -------- VECTOR 1: Bag of Words --------
+    vectorizer_bow = CountVectorizer()
+    X_bow = vectorizer_bow.fit_transform([texto_limpio])
+
+    print("Bag of Words shape:")
+    print(X_bow.shape)
+
+    # -------- VECTOR 2: TF-IDF --------
+    vectorizer_tfidf = TfidfVectorizer()
+    X_tfidf = vectorizer_tfidf.fit_transform([texto_limpio])
+
+    print("\nTF-IDF shape:")
+    print(X_tfidf.shape)
