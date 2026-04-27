@@ -1,0 +1,37 @@
+# limpieza_texto.py
+import re
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+
+# Descargar recursos necesarios
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet')
+
+def limpiar_texto(texto):
+    # 1. Normalización
+    texto = texto.lower()
+    texto = re.sub(r'[^a-záéíóúñü\s]', '', texto)
+
+    # 2. Tokenización
+    tokens = texto.split()
+
+    # 3. Eliminar stopwords
+    stop_words = set(stopwords.words('spanish'))
+    tokens = [t for t in tokens if t not in stop_words]
+
+    # 4. Lematización
+    lemmatizer = WordNetLemmatizer()
+    tokens = [lemmatizer.lemmatize(t) for t in tokens]
+
+    return tokens
+
+if __name__ == "__main__":
+    with open("libro.txt", "r", encoding="utf-8") as f:
+        texto = f.read()
+
+    resultado = limpiar_texto(texto)
+
+    print("Primeros 50 tokens procesados:")
+    print(resultado[:50])
