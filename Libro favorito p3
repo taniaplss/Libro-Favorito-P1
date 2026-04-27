@@ -1,0 +1,73 @@
+# proyecto_nlp.py
+import re
+import nltk
+import matplotlib.pyplot as plt
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from gensim.models import Word2Vec
+from sklearn.decomposition import PCA
+
+# Descargas necesarias
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet')
+
+# -------- LIMPIEZA --------
+def limpiar_texto(texto):
+    texto = texto.lower()
+    texto = re.sub(r'[^a-záéíóúñü\s]', '', texto)
+
+    tokens = texto.split()
+
+    stop_words = set(stopwords.words('spanish'))
+    tokens = [t for t in tokens if t not in stop_words]
+
+    lemmatizer = WordNetLemmatizer()
+    tokens = [lemmatizer.lemmatize(t) for t in tokens]
+
+    return tokens
+
+# -------- MAIN --------
+if __name__ == "__main__":
+    with open("libro.txt", "r", encoding="utf-8") as f:
+        texto = f.read()
+
+    tokens = limpiar_texto(texto)
+
+    # -------- VECTOR 1: Bag of Words --------
+    bow = CountVectorizer()
+    bow.fit_transform([" ".join(tokens)])
+
+    # -------- VECTOR 2: TF-IDF --------
+    tfidf = TfidfVectorizer()
+    tfidf.fit_transform([" ".join(tokens)])
+
+    # -------- VECTOR 3: WORD2VEC (SEMÁNTICA) --------
+    modelo_w2v = Word2Vec([tokens], vector_size=50, window=5, min_count=1)
+
+    # Obtener vectores
+    palabras = list(modelo_w2v.wv.index_to_key)
+    vectores = modelo_w2v.wv[palabras]
+
+    # -------- REDUCCIÓN DE DIMENSIONES --------
+    pca = PCA(n_components=2)
+    vectores_2d = pca.fit_transform(vectores)
+
+    # -------- GRÁFICA 1 --------
+    plt.figure()
+    for i, palabra in enumerate(palabras[:20]):
+        x, y = vectores_2d[i]
+        plt.scatter(x, y)
+        plt.text(x, y, palabra)
+
+    plt.title("Espacio vectorial Word2Vec (PCA)")
+    plt.savefig("grafica1.png")
+
+    # -------- GRÁFICA 2 --------
+    plt.figure()
+    plt.scatter(vectores_2d[:, 0], vectores_2d[:, 1])
+    plt.title("Distribución general de palabras")
+    plt.savefig("grafica2.png")
+
+    print("Proceso completado. Se generaron las gráficas.")
